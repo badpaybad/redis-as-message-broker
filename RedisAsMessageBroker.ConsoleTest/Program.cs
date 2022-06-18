@@ -10,7 +10,7 @@ _ = Task.Run(() =>
      {
          await Task.Yield();
          Console.WriteLine("consummer1: " + msg);
-        // you code business here
+         // you code business here
      });
 
     _ = c1.Start();
@@ -26,10 +26,29 @@ var c2 = new RedisConsumer(redis, "dunp2", "dunp", async (msg) =>
 
 _ = c2.Start();
 
+long msgIdx = 0;
+
+var producer = new RedisProducer(redis);
+
+var stressTest = Enumerable.Range(0, 1000);
+Console.WriteLine("Start stress test");
 
 while (true)
 {
-    _ = new RedisProducer(redis).Publish("dunp", DateTime.Now.ToString());
+    List<Task> tasks = new List<Task>();    
 
-    await Task.Delay(1000);
+    Parallel.ForEach(stressTest, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+        i =>
+        {
+            tasks.Add( producer.Publish("dunp", i + "__" + DateTime.Now.ToString()));
+            
+        });
+
+    tasks.Add( producer.Publish("dunp", msgIdx + "_" + DateTime.Now.ToString()));
+
+    msgIdx++;
+
+    await Task.WhenAll(tasks);
+
+    await Task.Delay(1);
 }
