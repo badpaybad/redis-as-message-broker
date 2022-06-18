@@ -126,10 +126,7 @@ class RedisConsummer:
         self._thread.join()
         self.Do()
     
-    def Do(self):
-        if self._isStart:
-            return
-        self._isStart=True
+    def Do(self):        
         counterNoMsg=0
         while True:
             temp=[]
