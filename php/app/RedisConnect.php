@@ -1,4 +1,5 @@
 <?php
+
 namespace app;
 
 class RedisConnect
@@ -11,8 +12,12 @@ class RedisConnect
     const ERROR = '-';
     const NL = "\r\n";
     private $handle = false;
-    private $host;
-    private $port;
+    
+    public $host;
+    public $port;
+    public $password;
+    public $defaultDb;
+
     private $silent_fail;
     private $commands = array();
     //Timeout for stream, 30 seconds
@@ -28,6 +33,11 @@ class RedisConnect
 
     public function __construct($host = false, $port = false, $password = '', $defaultDb = 0, $silent_fail = false, $timeout = 60)
     {
+        $this->host = $host;
+        $this->port = $port;
+        $this->password = $password;
+        $this->defaultDb = $defaultDb;
+
         if ($host && $port) {
             $this->connect($host, $port, $silent_fail, $timeout);
 
@@ -53,7 +63,7 @@ class RedisConnect
         } else {
             $this->handle = fsockopen($host, $port, $errno, $errstr, $this->connect_timeout);
             if (!$this->handle) {
-                die("Can not connect to redis: ". $host .":".$port);
+                die("Can not connect to redis: " . $host . ":" . $port);
             }
         }
         if (is_resource($this->handle)) {
@@ -181,7 +191,7 @@ class RedisConnect
     //For integer responses only
     private function integer_response()
     {
-        return ( int )trim(fgets($this->handle));
+        return (int)trim(fgets($this->handle));
     }
     //For error responses only
     private function error_response()
@@ -285,6 +295,11 @@ class RedisConnect
         return $this->cmd("LPOP", $stackName)->get();
     }
 
+    public function ListLength($queueName)
+    {
+        return $this->cmd("LLEN", $queueName)->get();
+    }
+
     public function Enqueue($queueName, $value)
     {
         $this->cmd("LPUSH", $queueName, $value)->set();
@@ -292,7 +307,14 @@ class RedisConnect
 
     public function Dequeue($queueName)
     {
-        return $this->cmd("RPOP", $queueName)->get();
+        $msg = $this->cmd("RPOP", $queueName)->get();
+        if (!is_array($msg)) return $msg;
+
+        $typeMsg = $msg[0];
+        $key = $msg[1];
+        $msg = $msg[2];
+
+        return $msg;
     }
 
     public function HashSet($key, $field, $value,  $expireInSeconds = null)
@@ -309,7 +331,7 @@ class RedisConnect
         return $this->cmd("HGET", $key, $field)->get();
     }
 
-    public function HashGetAll($key):array
+    public function HashGetAll($key): array
     {
         $data = $this->cmd("HGETALL", $key)->get();
         $dataLength = count($data) - 1;
@@ -359,14 +381,15 @@ class RedisConnect
 
     public function ListRemoveExisted($listName, $item)
     {
-        $this->cmd("LREM", $listName,0, $item)->set();
+        $this->cmd("LREM", $listName, 0, $item)->set();
     }
 
-    public function ListRange($listName,$from=0,$to=null){
-        if($to==null){
-            $to =$this->cmd("LLEN", $listName)->get();
+    public function ListRange($listName, $from = 0, $to = null)
+    {
+        if ($to == null) {
+            $to = $this->cmd("LLEN", $listName)->get();
         }
-        return $this->cmd("LRANGE",$listName, $from, $to)->get();
+        return $this->cmd("LRANGE", $listName, $from, $to)->get();
     }
 
     public function Existed($key)
@@ -403,10 +426,15 @@ class RedisConnect
                     }
 
                     $response = $this->get_response();
+                    if (is_array($response)) {
 
-                    for ($i = count($response); $i < 4; ++$i) {
-                        $response[] = null;
+                        for ($i = count($response); $i < 4; ++$i) {
+                            $response[] = null;
+                        }
+                    } else {
+                        $response = [null, null, null];
                     }
+
                     if ($this->force_reconnect) {
                         $this->reconnect();
                     }
@@ -420,8 +448,11 @@ class RedisConnect
                     }
                     $continue = true;
                 } else if ($response[0] === "message") {
+
                     $msg = array($response[2]);
                     $continue = call_user_func_array($onMessage, $msg);
+
+                    //echo "onMsg: ". $continue ;
                 }
 
                 if ($continue === false) {
