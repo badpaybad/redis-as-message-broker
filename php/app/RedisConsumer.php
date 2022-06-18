@@ -15,7 +15,6 @@ class RedisConsumer
     private string $_queueData;
     private bool $_isStart = false;
 
-
     private RedisConnect $redisForDequeue;
 
     function __construct(RedisConnect $redis, string $consumerName, string $topic, callable $onMsg)

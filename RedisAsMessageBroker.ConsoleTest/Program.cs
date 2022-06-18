@@ -1,8 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using RedisAsMessageBroker.Core;
 
-Console.WriteLine("Hello, World!");
-
 RedisConnect redis = new RedisConnect("localhost", 6379);
 
 _ = Task.Run(() =>
