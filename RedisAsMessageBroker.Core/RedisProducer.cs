@@ -2,7 +2,7 @@
 {
     public class RedisProducer
     {
-        RedisConnect _redis;
+        readonly RedisConnect _redis;
 
         public RedisProducer(RedisConnect redis)
         {

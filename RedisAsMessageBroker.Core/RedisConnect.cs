@@ -5,9 +5,9 @@ namespace RedisAsMessageBroker.Core
     public class RedisConnect
     {
 
-        SocketManager? _socketManager;
-        IConnectionMultiplexer? _connectionMultiplexer;
-        ConfigurationOptions? _options = null;
+        readonly SocketManager _socketManager;
+        IConnectionMultiplexer _connectionMultiplexer;
+        readonly ConfigurationOptions _options ;
 
         public RedisConnect(string host, int port, string pwd = "", int dbIdx = 0, bool allowAdmin = true)
         {
@@ -92,9 +92,7 @@ namespace RedisAsMessageBroker.Core
 
         public async Task<string> Dequeue(string queueName)
         {
-            var temp = await (await GetDatabase()).ListRightPopAsync(queueName);
-
-            return temp;
+            return await (await GetDatabase()).ListRightPopAsync(queueName);
         }
 
         public async Task<bool> HashSet(string key, string field, string value)

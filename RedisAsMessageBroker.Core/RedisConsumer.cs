@@ -4,17 +4,17 @@ namespace RedisAsMessageBroker.Core
 {
     public class RedisConsumer
     {
-        RedisConnect _redis;
+        readonly RedisConnect _redis;
 
-        string _topic;
+        readonly string _topic;
 
-        string _name;
+        readonly string _name;
 
-        string _queueData;
+        readonly string _queueData;
 
-        Func<string, Task> _onMsg;
+        readonly Func<string, Task> _onMsg;
 
-        string _topicContainer;
+        readonly string _topicContainer;
 
         ISubscriber _subscriber;
         ChannelMessageQueue _channelMsgQueue;
