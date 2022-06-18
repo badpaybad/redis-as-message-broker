@@ -15,14 +15,17 @@ composer.json file
                     }
                 }
 
+ref composer usage
+                
+
                 https://getcomposer.org/doc/01-basic-usage.md
 
                 https://getcomposer.org/download/
 
 
+# run
                 composer update
 
-# run
                 php program.php
 
 
