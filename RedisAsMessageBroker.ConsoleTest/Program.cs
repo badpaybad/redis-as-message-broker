@@ -37,12 +37,12 @@ while (true)
 {
     List<Task> tasks = new List<Task>();    
 
-    Parallel.ForEach(stressTest, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-        i =>
-        {
-            tasks.Add( producer.Publish("dunp", i + "__" + DateTime.Now.ToString()));
+    //Parallel.ForEach(stressTest, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+    //    i =>
+    //    {
+    //        tasks.Add( producer.Publish("dunp", i + "__" + DateTime.Now.ToString()));
             
-        });
+    //    });
 
     tasks.Add( producer.Publish("dunp", msgIdx + "_" + DateTime.Now.ToString()));
 
@@ -50,5 +50,5 @@ while (true)
 
     await Task.WhenAll(tasks);
 
-    await Task.Delay(1);
+    await Task.Delay(1000);
 }
