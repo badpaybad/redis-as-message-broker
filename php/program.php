@@ -12,18 +12,6 @@ use app\RedisProducer;
 
 $redis= new RedisConnect("localhost",6379,"",0);
 
-// while(true)
-//     echo $redis->ListLength("dunp:data:php1");
-
-// while(true){
-  
-//     $msg= $redis->Dequeue("dunp:data:php1");
-
-//     echo $msg."\r\n";
-
-//     usleep(1000);
-// }
-
 $consumer1= new RedisConsumer($redis,"php1","dunp",function($msg){
     echo "\r\n----inside consumer php1: ". $msg ."---\r\n";
 });

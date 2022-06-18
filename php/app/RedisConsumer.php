@@ -72,13 +72,27 @@ class RedisConsumer
         }
     }
 
+    function Publish(string $msg)
+    {
+        $listConsumer =  $this->redisForDequeue->HashGetAll($this->_topic . ":consumers");
+
+        if (count($listConsumer) == 0) return 0;
+
+        foreach ($listConsumer as $c) {
+            $queueName = $this->_topic . ":data:" . $c;
+            $this->redisForDequeue->Enqueue($queueName, $msg);
+        }
+
+        return $this->redisForDequeue->Publish($this->_topic, $msg);
+    }
+
     public  function Start()
     {
         if ($this->_isStart) return;
 
         $this->_isStart = true;
         $date = new DateTime();
-        $this->redis->HashSet($this->_topicContainer, $this->_name, $date->format('Y-m-d H:i:s'));
+        $this->redisForDequeue->HashSet($this->_topicContainer, $this->_name, $date->format('Y-m-d H:i:s'));
 
         $this->Do();
         $this->redis->Subscribe($this->_topic, function ($msg) {

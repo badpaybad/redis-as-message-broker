@@ -21,6 +21,6 @@ class RedisProducer{
             $this->redis->Enqueue($queueName,$msg);
         }
 
-        $this->redis->Publish($topic,$msg);
+        return $this->redis->Publish($topic,$msg);
     }
 }

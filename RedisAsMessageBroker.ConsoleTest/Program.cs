@@ -31,5 +31,5 @@ while (true)
 {
     new RedisProducer(redis).Publish("dunp", DateTime.Now.ToString());
 
-    await Task.Delay(1);
+    await Task.Delay(1000);
 }
