@@ -79,8 +79,8 @@ class RedisConsumer
 
         if (count($listConsumer) == 0) return 0;
 
-        foreach ($listConsumer as $c) {
-            $queueName = $this->_topic . ":data:" . $c;
+        foreach ($listConsumer as $k=>$v) {
+            $queueName = $this->_topic . ":data:" . $k;
             $this->redisForDequeue->Enqueue($queueName, $msg);
         }
 
