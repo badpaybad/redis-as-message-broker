@@ -30,15 +30,14 @@ class RedisConsumer
 
         $this->_onMsg = $onMsg;
     }
-    private $counter = 0;
+
     private function Do()
     {
-        $this->counter = 0;
         $counterNoMsg = 0;
         while (true) {
             try {
                 $temp = [];
-                for ($i = 0; $i < 100; $i++) {
+                for ($i = 0; $i < 10; $i++) {
                     $msg = $this->redisForDequeue->Dequeue($this->_queueData);
                     if (!empty($msg)) {
                         $temp[] = $msg;
@@ -49,8 +48,7 @@ class RedisConsumer
                     foreach ($temp as $msg) {
                         call_user_func_array($this->_onMsg, [$msg]);
                     }
-                } 
-                else {
+                } else {
                     $len = $this->redisForDequeue->ListLength($this->_queueData);
 
                     if ($len <= 0) {
