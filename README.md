@@ -14,6 +14,11 @@ dotnet console to test
 provide php sample redis connect, producer, consumer
 
 
+# python
+
+provide python sample redis connect , consumer
+
+
 # sequence diagram
 
 https://docs.google.com/drawings/d/1MXkgz0RK5Gk43cuBpWbKSEKSIkv6h8O-gYX4aM0MOzs/edit?usp=sharing

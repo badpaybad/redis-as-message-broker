@@ -15,9 +15,9 @@ class RedisProducer{
 
         if ( count($listConsumer)==0) return 0;
 
-        foreach($listConsumer as $c)
+        foreach($listConsumer as $k=>$v)
         {
-            $queueName=$topic.":data:".$c;
+            $queueName=$topic.":data:".$k;
             $this->redis->Enqueue($queueName,$msg);
         }
 
