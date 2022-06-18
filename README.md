@@ -16,4 +16,6 @@ provide php sample redis connect, producer, consumer
 
 # squence diagram
 
-![alt text](https://docs.google.com/drawings/d/1MXkgz0RK5Gk43cuBpWbKSEKSIkv6h8O-gYX4aM0MOzs/edit?usp=sharing)
+https://docs.google.com/drawings/d/1MXkgz0RK5Gk43cuBpWbKSEKSIkv6h8O-gYX4aM0MOzs/edit?usp=sharing
+
+![image in google drive](https://docs.google.com/drawings/d/1MXkgz0RK5Gk43cuBpWbKSEKSIkv6h8O-gYX4aM0MOzs/edit?usp=sharing)
