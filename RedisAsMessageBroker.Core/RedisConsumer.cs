@@ -134,6 +134,8 @@ namespace RedisAsMessageBroker.Core
             await _redis.HashDelete(_topicContainer, _name);
             await (await GetSubscriber()).UnsubscribeAsync(_topic);
             _ = Do();
+
+            _started = false;
         }
     }
 }

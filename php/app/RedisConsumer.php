@@ -107,6 +107,7 @@ class RedisConsumer
         $this->redisForDequeue->HashDelete($this->_topicContainer, $this->_name);
         $this->redis->Unsubscribe($this->_topic);        
         $this->Do();
+        $this->_isStart=false;
     }
 
     function __destruct()
