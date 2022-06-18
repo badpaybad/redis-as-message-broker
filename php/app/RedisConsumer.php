@@ -15,6 +15,8 @@ class RedisConsumer
     private string $_queueData;
     private bool $_isStart = false;
 
+    private int $_maxSize=4;
+
     private RedisConnect $redisForDequeue;
 
     function __construct(RedisConnect $redis, string $consumerName, string $topic, callable $onMsg)
@@ -36,7 +38,7 @@ class RedisConsumer
         while (true) {
             try {
                 $temp = [];
-                for ($i = 0; $i < 10; $i++) {
+                for ($i = 0; $i < $this->_maxSize; $i++) {
                     $msg = $this->redisForDequeue->Dequeue($this->_queueData);
                     if (!empty($msg)) {
                         $temp[] = $msg;
@@ -62,7 +64,7 @@ class RedisConsumer
                     }
                 }
 
-                usleep(100);
+                usleep(1000);
             } catch (\Throwable $th) {
                 //
                 echo "Error Do: " . $th;
@@ -95,13 +97,15 @@ class RedisConsumer
 
         $this->Do();
         $this->redis->Subscribe($this->_topic, function ($msg) {
+            //pub sub trigger dequeue
             $this->Do();
         });
     }
 
     public function Stop()
     {
-        $this->redis->Unsubscribe($this->_topicContainer);
+        $this->redisForDequeue->HashDelete($this->_topicContainer, $this->_name);
+        $this->redis->Unsubscribe($this->_topic);        
         $this->Do();
     }
 

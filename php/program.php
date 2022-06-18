@@ -16,6 +16,7 @@ $redis = new RedisConnect("localhost", 6379, "", 0);
 
 $consumer1 = new RedisConsumer($redis, "php1", "dunp", function ($msg) {
     echo "\r\n----inside consumer php1: " . $msg . "---\r\n";
+    //// you code business here
 });
 
 $consumer1->Start();

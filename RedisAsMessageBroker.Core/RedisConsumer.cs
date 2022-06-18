@@ -20,7 +20,7 @@ namespace RedisAsMessageBroker.Core
         ChannelMessageQueue _channelMsgQueue;
 
         bool _started = false;
-
+        readonly int _maxSize = Environment.ProcessorCount;
         public RedisConsumer(RedisConnect redis, string consumerName, string topic, Func<string, Task> onMsg)
         {
             _redis = redis;
@@ -34,18 +34,45 @@ namespace RedisAsMessageBroker.Core
             _onMsg = onMsg;
 
         }
+
         async Task Do()
         {
-            List<string> temp = new List<string>();
+            int counterNoMsg = 0;
             while (true)
             {
                 try
                 {
-                    var msg = await _redis.Dequeue(_queueData);
+                    List<string> temp = new List<string>();
+                    for (var i = 0; i < _maxSize; i++)
+                    {
+                        var msg = await _redis.Dequeue(_queueData);
 
-                    if (string.IsNullOrEmpty(msg)) break;
-
-                    temp.Add(msg);
+                        if (!string.IsNullOrEmpty(msg))
+                            temp.Add(msg);
+                    }
+                    if (temp.Count > 0)
+                    {
+                        List<Task> tasks = new List<Task>();
+                        foreach (var t in temp)
+                        {
+                            tasks.Add(_onMsg(t));
+                        }
+                        await Task.WhenAll(tasks);
+                    }
+                    else
+                    {
+                        var lng = await _redis.ListLength(_queueData);
+                        if (lng <= 0)
+                        {
+                            counterNoMsg++;
+                            if (counterNoMsg > 5)
+                            {
+                                counterNoMsg = 0;
+                                break;
+                            }
+                            await Task.Delay(100);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -56,10 +83,6 @@ namespace RedisAsMessageBroker.Core
                 await Task.Delay(1);
             }
 
-            foreach (var t in temp)
-            {
-                _ = _onMsg(t);
-            }
         }
 
         async Task<ISubscriber> GetSubscriber()
@@ -97,6 +120,7 @@ namespace RedisAsMessageBroker.Core
 
             _channelMsgQueue.OnMessage((msg) =>
             {
+                //pub sub trigger dequeue
                 _ = Do();
             });
 
@@ -108,7 +132,7 @@ namespace RedisAsMessageBroker.Core
         public async Task Stop()
         {
             await _redis.HashDelete(_topicContainer, _name);
-
+            await (await GetSubscriber()).UnsubscribeAsync(_topic);
             _ = Do();
         }
     }

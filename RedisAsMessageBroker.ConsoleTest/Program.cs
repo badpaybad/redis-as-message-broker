@@ -10,7 +10,7 @@ _ = Task.Run(() =>
      {
          await Task.Yield();
          Console.WriteLine("consummer1: " + msg);
-
+        // you code business here
      });
 
     _ = c1.Start();
@@ -21,7 +21,7 @@ var c2 = new RedisConsumer(redis, "dunp2", "dunp", async (msg) =>
  {
      await Task.Yield();
      Console.WriteLine("consummer2: " + msg);
-
+     // you code business here
  });
 
 _ = c2.Start();

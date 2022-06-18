@@ -331,6 +331,10 @@ class RedisConnect
         return $this->cmd("HGET", $key, $field)->get();
     }
 
+    public function HashDelete($key, $field)
+    {
+        return $this->cmd("HDEL", $key, $field)->set();
+    }
     public function HashGetAll($key): array
     {
         $data = $this->cmd("HGETALL", $key)->get();

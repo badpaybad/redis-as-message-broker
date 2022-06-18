@@ -119,5 +119,10 @@ namespace RedisAsMessageBroker.Core
             return temp;
 
         }
+
+        public async Task<long> ListLength(string key)
+        {
+            return await (await GetDatabase()).ListLengthAsync(key);
+        }
     }
 }
