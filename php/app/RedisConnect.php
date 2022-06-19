@@ -463,7 +463,7 @@ class RedisConnect
                     $this->Unsubscribe($channelName);
                 }
 
-                usleep(1000);
+                usleep(100);
             } while ($continue !== false);
         }
     }

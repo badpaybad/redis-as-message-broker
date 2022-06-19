@@ -20,7 +20,7 @@ namespace RedisAsMessageBroker.Core
         ChannelMessageQueue _channelMsgQueue;
 
         bool _started = false;
-        readonly int _maxSize = Environment.ProcessorCount;
+        readonly int _numOfItemDequeue = (Environment.ProcessorCount / 4)+1;
         public RedisConsumer(RedisConnect redis, string consumerName, string topic, Func<string, Task> onMsg)
         {
             _redis = redis;
@@ -43,7 +43,7 @@ namespace RedisAsMessageBroker.Core
                 try
                 {
                     List<string> temp = new List<string>();
-                    for (var i = 0; i < _maxSize; i++)
+                    for (var i = 0; i < _numOfItemDequeue; i++)
                     {
                         var msg = await _redis.Dequeue(_queueData);
 
@@ -116,6 +116,10 @@ namespace RedisAsMessageBroker.Core
 
             _started = true;
 
+            await _redis.HashSet(_topicContainer, _name, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            _ = Do();
+
             _channelMsgQueue = await (await GetSubscriber()).SubscribeAsync(_topic);
 
             _channelMsgQueue.OnMessage((msg) =>
@@ -124,9 +128,7 @@ namespace RedisAsMessageBroker.Core
                 _ = Do();
             });
 
-            await _redis.HashSet(_topicContainer, _name, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
-            _ = Do();
+          
         }
 
         public async Task Stop()

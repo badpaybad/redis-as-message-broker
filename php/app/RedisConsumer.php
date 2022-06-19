@@ -15,7 +15,7 @@ class RedisConsumer
     private string $_queueData;
     private bool $_isStart = false;
 
-    private int $_maxSize=4;
+    private int $_numOfItemDequeue=2;
 
     private RedisConnect $redisForDequeue;
 
@@ -38,7 +38,7 @@ class RedisConsumer
         while (true) {
             try {
                 $temp = [];
-                for ($i = 0; $i < $this->_maxSize; $i++) {
+                for ($i = 0; $i < $this->_numOfItemDequeue; $i++) {
                     $msg = $this->redisForDequeue->Dequeue($this->_queueData);
                     if (!empty($msg)) {
                         $temp[] = $msg;

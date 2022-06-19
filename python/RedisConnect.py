@@ -84,7 +84,7 @@ class RedisConsummer:
         self._isStart=False
         self._isStop=False
         self.subscriber= self._redis.Subscribe(topic)
-        self._sizeMax=4
+        self._numOfItemDequeue=2
         self._thread=Thread(target=self.pubSubOnMessage, args=(self.subscriber,), daemon=True)
         pass    
         
@@ -96,7 +96,7 @@ class RedisConsummer:
                 #trigger for dequeue
                 self.Do()            
                 
-            sleep(0.001)
+            sleep(0.00001)
     
     def Publish(self,msg:str):
         listSub= self._redis.HashGetAll(self._topicContainer)
@@ -130,7 +130,7 @@ class RedisConsummer:
         counterNoMsg=0
         while True:
             temp=[]
-            for i in range(self._sizeMax):
+            for i in range(self._numOfItemDequeue):
                 msg=self._redis.Dequeue(self._queueName)
                 if msg!="":
                     temp.append(msg)
