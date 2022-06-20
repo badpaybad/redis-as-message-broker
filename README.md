@@ -9,6 +9,9 @@ redis as message broker, use queue to keep msg for each consumer, pub sub for tr
 
 dotnet console to test
 
+                    dotnet build
+                    dotnet ./bin/Debug/net6.0/RedisAsMessageBroker.ConsoleTest.dll
+
 # php 
 
 provide php sample redis connect, producer, consumer
