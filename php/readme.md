@@ -6,7 +6,9 @@ php version >= 7.4
 composer.json file
 
                 {
-                    "require": {},
+                    "require": {
+                        "krakjoe/pthreads-polyfill": "^1.1"
+                    },
                     "autoload": {
                         "psr-4": {            
                             //"your namespace\\": "your folder/"
@@ -24,6 +26,8 @@ ref composer usage
 
 
 # run
+
+                composer require krakjoe/pthreads-polyfill
                 composer update
 
                 php program.php

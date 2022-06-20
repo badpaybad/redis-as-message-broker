@@ -5,7 +5,7 @@ namespace libs;
 use libs\RedisConnect;
 use DateTime;
 
-class RedisConsumer
+class RedisConsumer 
 {
     private RedisConnect $redis;
     private $_onMsg;

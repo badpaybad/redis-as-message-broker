@@ -1,5 +1,7 @@
 {
-    "require": {},
+    "require": {
+        "krakjoe/pthreads-polyfill": "^1.1"
+    },
     "autoload": {
         "psr-4": {            
             "libs\\": "libs/"

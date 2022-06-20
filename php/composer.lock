@@ -4,8 +4,59 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8d070178755c320c69f93ee4800660ef",
-    "packages": [],
+    "content-hash": "eb351445063156a65a0cb034d6231e8a",
+    "packages": [
+        {
+            "name": "krakjoe/pthreads-polyfill",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/krakjoe/pthreads-polyfill.git",
+                "reference": "e0b6b34aca142dda943bf8ade046285fd2000c35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/krakjoe/pthreads-polyfill/zipball/e0b6b34aca142dda943bf8ade046285fd2000c35",
+                "reference": "e0b6b34aca142dda943bf8ade046285fd2000c35",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Collectable.php",
+                    "src/Threaded.php",
+                    "src/Volatile.php",
+                    "src/Thread.php",
+                    "src/Worker.php",
+                    "src/Pool.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "PHP"
+            ],
+            "authors": [
+                {
+                    "name": "Joe Watkins",
+                    "email": "krakjoe@php.net"
+                }
+            ],
+            "description": "A polyfill for pthreads",
+            "homepage": "http://pthreads.org/",
+            "keywords": [
+                "polyfill",
+                "pthreads"
+            ],
+            "support": {
+                "issues": "https://github.com/krakjoe/pthreads-polyfill/issues",
+                "source": "https://github.com/krakjoe/pthreads-polyfill/tree/master"
+            },
+            "time": "2015-11-16T08:24:31+00:00"
+        }
+    ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",

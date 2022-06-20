@@ -8,10 +8,29 @@ echo "RootDir: " . $workingDir . "\r\n";
 require_once  $workingDir . '/vendor/autoload.php';
 echo "autoload.php init done\r\n";
 
+if (extension_loaded("pthreads")) {
+    echo "Using pthreads\n";
+} else  echo "Using polyfill\n";
+
 use libs\RedisConnect;
 use libs\RedisConsumer;
 use libs\RedisProducer;
 
+$worker1 = new class extends Thread
+{
+    public function run()
+    {
+
+        $redis = new RedisConnect("localhost", 6379, "", 0);
+
+        $consumer1 = new RedisConsumer($redis, "php1", "dunp", function ($msg) {
+            echo "\r\n----inside consumer php1: " . $msg . "---\r\n";
+            //// you code business here
+        });
+        $consumer1->Start();
+        $consumer1->Stop();
+    }
+};
 $redis = new RedisConnect("localhost", 6379, "", 0);
 
 $consumer1 = new RedisConsumer($redis, "php1", "dunp", function ($msg) {
@@ -19,15 +38,51 @@ $consumer1 = new RedisConsumer($redis, "php1", "dunp", function ($msg) {
     //// you code business here
 });
 
-$consumer1->Start();
+class RedisWorkerConsumer extends Thread
+{
+    private $consumer;
+    public function __construct(RedisConsumer $redisConsumer)
+    {
+        $this->consumer = $redisConsumer;
+    }
 
-$consumer1->Stop();
-
-$counter=0;
-while (true){
-
-    $consumer1->Publish("from php ". $counter);
-
-    $counter=$counter+1;
-    sleep(1);
+    public function run()
+    {
+        $this->consumer->Start();
+    }
 }
+
+
+class RedisWorkerProducer extends Thread
+{
+    private $consumer;
+    public function __construct(RedisConsumer $redisConsumer)
+    {
+        $this->consumer = $redisConsumer;
+    }
+
+    public function run()
+    {
+        $counter = 0;
+        while (true) {
+
+            $this->consumer->Publish("from php " . $counter);
+
+            $counter = $counter + 1;
+            sleep(1);
+        }
+    }
+}
+
+
+$worker1 = new RedisWorkerConsumer($consumer1);
+
+$worker1->start();
+
+$worker2 = new RedisWorkerProducer($consumer1);
+
+$worker2->start();
+
+$worker1->join();
+$worker2->join();
+$consumer1->Stop();
