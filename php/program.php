@@ -32,7 +32,8 @@ class RedisWorkerConsumer extends Thread
     }
 
     public function run()
-    {
+    { 
+        echo "stated consumer";
         $this->consumer->Start();
     }
 }
@@ -42,15 +43,22 @@ class RedisWorkerProducer extends Thread
     private $consumer;
     public function __construct(RedisConsumer $redisConsumer)
     {
-        $this->consumer = $redisConsumer;
+        //$this->consumer = $redisConsumer;
     }
 
     public function run()
     {
+        echo "stated producer";
+        $redis = new RedisConnect("localhost", 6379, "", 0);
+
+        $consumer = new RedisConsumer($redis, "php1", "dunp", function ($msg) {            
+            //// you code business here
+        });
+
         $counter = 0;
         while (true) {
 
-            $this->consumer->Publish("from php " . $counter);
+            $consumer->Publish("from php " . $counter);
 
             $counter = $counter + 1;
             sleep(1);
@@ -58,13 +66,10 @@ class RedisWorkerProducer extends Thread
     }
 }
 
-
 $worker1 = new RedisWorkerConsumer($consumer1);
-
-$worker1->start();
-
 $worker2 = new RedisWorkerProducer($consumer1);
 
+$worker1->start();
 $worker2->start();
 
 $worker1->join();
