@@ -16,11 +16,15 @@ dotnet console to test
 
 provide php sample redis connect, producer, consumer
 
+                    composer update
+                    php program.php
 
 # python
 
 provide python sample redis connect , consumer
 
+                    pip install redis
+                    python program.py
 
 # sequence diagram
 
