@@ -1,6 +1,6 @@
 <?php
-namespace app;
-use App\RedisConnect;
+namespace libs;
+use libs\RedisConnect;
 
 class RedisProducer{
     private RedisConnect $redis;

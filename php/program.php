@@ -8,9 +8,9 @@ echo "RootDir: " . $workingDir . "\r\n";
 require_once  $workingDir . '/vendor/autoload.php';
 echo "autoload.php init done\r\n";
 
-use app\RedisConnect;
-use app\RedisConsumer;
-use app\RedisProducer;
+use libs\RedisConnect;
+use libs\RedisConsumer;
+use libs\RedisProducer;
 
 $redis = new RedisConnect("localhost", 6379, "", 0);
 
@@ -22,3 +22,12 @@ $consumer1 = new RedisConsumer($redis, "php1", "dunp", function ($msg) {
 $consumer1->Start();
 
 $consumer1->Stop();
+
+$counter=0;
+while (true){
+
+    $consumer1->Publish("from php ". $counter);
+
+    $counter=$counter+1;
+    sleep(1);
+}

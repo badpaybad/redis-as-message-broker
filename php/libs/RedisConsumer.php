@@ -1,8 +1,8 @@
 <?php
 
-namespace app;
+namespace libs;
 
-use App\RedisConnect;
+use libs\RedisConnect;
 use DateTime;
 
 class RedisConsumer
@@ -73,7 +73,7 @@ class RedisConsumer
         }
     }
 
-    function Publish(string $msg)
+    public function Publish(string $msg)
     {
         $listConsumer =  $this->redisForDequeue->HashGetAll($this->_topic . ":consumers");
 
@@ -87,7 +87,7 @@ class RedisConsumer
         return $this->redisForDequeue->Publish($this->_topic, $msg);
     }
 
-    public  function Start()
+    public function Start()
     {
         if ($this->_isStart) return;
 

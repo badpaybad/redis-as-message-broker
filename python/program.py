@@ -9,5 +9,9 @@ connect= RedisConnect.RedisConnect("localhost",6379,"",0)
 consumer= RedisConnect.RedisConsummer(connect,"python1","dunp", onMsg)
 consumer.Start()
 
+counter=0
 while True:
+    
+    consumer.Publish(f"from python: {counter}")
+    counter=counter+1
     sleep(1)

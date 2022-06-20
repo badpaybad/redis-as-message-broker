@@ -1,6 +1,6 @@
 <?php
 
-namespace app;
+namespace libs;
 
 class RedisConnect
 {
@@ -411,7 +411,7 @@ class RedisConnect
      * @$onMessage : function($message){ }
      * @$onSubscribed : function($type,$channel,$isSuccess)
      */
-    public function Subscribe($channelName, $onMessage, $onSubscribed = null)
+    public function Subscribe($channelName,callable $onMessage,callable $onSubscribed = null)
     {
         if (!$this->handle) {
             $this->reconnect();

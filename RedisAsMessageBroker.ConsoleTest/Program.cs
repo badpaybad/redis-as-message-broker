@@ -44,7 +44,7 @@ while (true)
             
     //    });
 
-    tasks.Add( producer.Publish("dunp", msgIdx + "_" + DateTime.Now.ToString()));
+    tasks.Add( producer.Publish("dunp", "from c#: "+ msgIdx + "_" + DateTime.Now.ToString()));
 
     msgIdx++;
 
