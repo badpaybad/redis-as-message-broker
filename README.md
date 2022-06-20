@@ -16,6 +16,7 @@ dotnet console to test
 
 provide php sample redis connect, producer, consumer
 
+                    composer require krakjoe/pthreads-polyfill
                     composer update
                     php program.php
 
