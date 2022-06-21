@@ -114,7 +114,7 @@ namespace RedisAsMessageBroker.Core
             Dictionary<string, string> temp = new Dictionary<string, string>();
             foreach (var d in data)
             {
-                temp.Add(d.Name, d.Value);
+                temp.TryAdd(d.Name, d.Value);
             }
             return temp;
 
