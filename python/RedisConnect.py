@@ -52,7 +52,7 @@ class RedisConnect:
         #msg = sub.get_message() 
         return sub
                 
-    def SubscribeGetMsg(self, sub):
+    def SubscribeGetMsg(self, sub: redis.client.PubSub):
         msg= sub.get_message()
         
         if msg and msg!=None:
