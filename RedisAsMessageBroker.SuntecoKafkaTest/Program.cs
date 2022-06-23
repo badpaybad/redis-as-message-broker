@@ -2,12 +2,11 @@
 using Confluent.Kafka;
 using Newtonsoft.Json;
 using System.Net;
+using System.Threading.Tasks.Dataflow;
 
 Console.WriteLine("Hello, World!");
 string host = "127.0.0.1:9092";
-host = "";
-var uid = "";
-var pwd = "";
+
 
 var cfg = new Dictionary<string, string>()
 {
@@ -27,47 +26,69 @@ var configProducer = new ProducerConfig(cfg)
     SecurityProtocol = SecurityProtocol.SaslSsl,
     SaslMechanism = SaslMechanism.ScramSha512,
 };
-var configConsumer = new ConsumerConfig(cfg)
+string topics = "dunp-test-1producer-11consumer-2";
+
+List<IConsumer<Ignore, string>> consumers = new List<IConsumer<Ignore, string>>();
+
+
+for (var i = 0; i < 3; i++)
 {
-    BootstrapServers = host,
-    //BootstrapServers = "localhost:9092,host2:9092",
-    GroupId = "omt",
-    AutoOffsetReset = AutoOffsetReset.Earliest,
-    Acks = Acks.All,
-    AllowAutoCreateTopics = true,
-    EnableAutoCommit = true,
-    SaslUsername = uid,
-    SslKeyPassword = pwd,
-    //SecurityProtocol = SecurityProtocol.Plaintext
-    SecurityProtocol = SecurityProtocol.SaslSsl,
-    SaslMechanism = SaslMechanism.ScramSha512,
-};
-
-string topics = "dunp-test1";
-
-var consumer = new ConsumerBuilder<Ignore, string>(configConsumer).Build();
-
-var dateStart = DateTime.Now;
-
-_ = Task.Run(async () =>
-{
-    consumer.Subscribe(topics);
-   
-    while (true)
+    var configConsumer = new ConsumerConfig(cfg)
     {
-        var xxx = DateTime.Now - dateStart;
+        BootstrapServers = host,
+        //BootstrapServers = "localhost:9092,host2:9092",
+        GroupId = "omt" + i,
+        AutoOffsetReset = AutoOffsetReset.Earliest,
+        Acks = Acks.All,
+        AllowAutoCreateTopics = true,
+        EnableAutoCommit = true,
+        SaslUsername = uid,
+        SslKeyPassword = pwd,
+        //SecurityProtocol = SecurityProtocol.Plaintext
+        SecurityProtocol = SecurityProtocol.SaslSsl,
+        SaslMechanism = SaslMechanism.ScramSha512,
 
-        var consumeResult = consumer.Consume();
-        Console.WriteLine("----Consumer:begin: " + DateTime.Now);
-        var obj = JsonConvert.DeserializeObject<TestMsg>(consumeResult.Value);
-        Console.WriteLine(obj.ToString());
-        Console.WriteLine("----Consumer:end");
-        consumer.Commit (consumeResult);
-        
-        await Task.Delay(1);
-    }
+    };
+
+    var consumer = new ConsumerBuilder<Ignore, string>(configConsumer).Build();
+
+    consumers.Add(consumer);
+
+}
+
+ActionBlock<IConsumer<Ignore, string>> ab = new ActionBlock<IConsumer<Ignore, string>>(async (consumer) =>
+{
+    _ = Task.Run(async () =>
+    {
+        consumer.Subscribe(topics);
+
+        while (true)
+        {
+            try
+            {
+                var consumeResult = consumer.Consume();
+
+                var obj = JsonConvert.DeserializeObject<TestMsg>(consumeResult.Value);
+
+                Console.WriteLine(consumer.Name + " " + obj.ToString());
+
+                consumer.Commit(consumeResult);
+
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(consumer.Name + ": " + ex.Message);
+            }
+            await Task.Delay(1);
+        }
+    });
 
 });
+
+foreach(var consumer in consumers)
+{
+   await ab.SendAsync(consumer);
+}
 
 var producer = new ProducerBuilder<Null, string>(configProducer).Build();
 
@@ -77,30 +98,38 @@ _ = Task.Run(async () =>
     {
         Console.WriteLine("Producer");
 
-        Parallel.ForEach(Enumerable.Range(0, 100), new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, async (i) =>
-         {
-             var r = await producer.ProduceAsync(topics, new Message<Null, string>
-             {
-                 Value = JsonConvert.SerializeObject(new TestMsg
-                 {
-                     CreatedAt = DateTime.Now,
-                     Msg = " Nguyen Phan Du "
-                 })
-             });
-         });
-       
-        await Task.Delay(1);
+        ActionBlock<int> abp = new ActionBlock<int>(async (i) => {
+            var r = await producer.ProduceAsync(topics, new Message<Null, string>
+            {
+                Value = JsonConvert.SerializeObject(new TestMsg
+                {
+                    CreatedAt = DateTime.Now,
+                    Msg = " Nguyen Phan Du "+i
+                })
+            });
+        }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism=5});
+
+        for (var i = 0; i < 100; i++)
+        {
+            await abp.SendAsync(i);
+        }
+
+        abp.Complete();
+        await abp.Completion;
+
+        await Task.Delay(1000);
     }
 
 });
 
 AppDomain.CurrentDomain.ProcessExit += async (sender, e) =>
 {
-    try { consumer.Close(); }
-    catch
-    {
-        //
-    }
+    foreach (var consumer in consumers)
+        try { consumer.Close(); }
+        catch
+        {
+            //
+        }
 
     Console.WriteLine("Exiting Main()");
     await Task.Yield();
@@ -108,11 +137,12 @@ AppDomain.CurrentDomain.ProcessExit += async (sender, e) =>
 
 Console.CancelKeyPress += (sender, e) =>
 {
-    try { consumer.Close(); }
-    catch
-    {
-        //
-    }
+    foreach (var consumer in consumers)
+        try { consumer.Close(); }
+        catch
+        {
+            //
+        }
     Console.WriteLine("Exiting Main()");
 
     Environment.Exit(0);
