@@ -27,7 +27,7 @@ var cliConf = new ClientConfig(cfg)
     SaslMechanism = SaslMechanism.ScramSha512,
 };
 
-//recomnend if topic hash 100msg/seconds , number partion and consumer will be = 10 , mean number of partion = 1/ 10 number of total push msg/sec
+//recomnend if topic have 100msg/seconds , number partion and consumer will be = 10 , mean number of partion = 1/ 10 number of total pushed msg/sec
 var numberOfPartion = 6;
 
 string topicName = $"dunp-test-1producer-{numberOfPartion}consumer-{numberOfPartion}partion";
