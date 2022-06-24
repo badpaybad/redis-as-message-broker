@@ -1,12 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using Newtonsoft.Json;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 
 Console.WriteLine("Hello, World!");
 string host = "127.0.0.1:9092";
-
 
 var cfg = new Dictionary<string, string>()
 {
@@ -16,51 +16,68 @@ var cfg = new Dictionary<string, string>()
     {"sasl.mechanisms","SCRAM-SHA-512" },
     {"security.protocol","SASL_SSL" },
 };
-var configProducer = new ProducerConfig(cfg)
+
+var cliConf = new ClientConfig(cfg)
 {
     BootstrapServers = host,
-    ClientId = Dns.GetHostName(),
+    ClientId = Dns.GetHostName() + ": " + DateTime.Now,
     SaslUsername = uid,
     SslKeyPassword = pwd,
-    //SecurityProtocol = SecurityProtocol.Plaintext
-    SecurityProtocol = SecurityProtocol.SaslSsl,
+    SecurityProtocol = host.IndexOf("127.0.0.1") >= 0 ? SecurityProtocol.Plaintext : SecurityProtocol.SaslSsl,
     SaslMechanism = SaslMechanism.ScramSha512,
 };
-string topics = "dunp-test-1producer-11consumer-2";
+
+//recomnend if topic hash 100msg/seconds , number partion and consumer will be = 10 , mean number of partion = 1/ 10 number of total push msg/sec
+var numberOfPartion = 6;
+
+string topicName = $"dunp-test-1producer-{numberOfPartion}consumer-{numberOfPartion}partion";
+
+var adminKafka = new AdminClientBuilder(cfg.Select(i => new KeyValuePair<string, string>(i.Key, i.Value))).Build();
+
+try
+{
+    var existed = adminKafka.GetMetadata(topicName, TimeSpan.FromSeconds(10));
+    if (existed.Topics.Count > 0)
+    {
+        await adminKafka.DeleteTopicsAsync(new List<string> { topicName });
+    }
+
+    await adminKafka.CreateTopicsAsync(new List<TopicSpecification> {
+        new TopicSpecification
+        {
+            Name= topicName,
+            NumPartitions=numberOfPartion
+        }
+        });
+}
+catch
+{
+    //
+}
+
+var configConsumer = new ConsumerConfig(cliConf)
+{
+    BootstrapServers = host,
+    GroupId = "omttestperformance",
+    AutoOffsetReset = AutoOffsetReset.Earliest,
+    Acks = Acks.All,
+    AllowAutoCreateTopics = true,
+    EnableAutoCommit = true,
+};
 
 List<IConsumer<Ignore, string>> consumers = new List<IConsumer<Ignore, string>>();
 
-
-for (var i = 0; i < 3; i++)
+for (var i = 0; i < numberOfPartion; i++)
 {
-    var configConsumer = new ConsumerConfig(cfg)
-    {
-        BootstrapServers = host,
-        //BootstrapServers = "localhost:9092,host2:9092",
-        GroupId = "omt" + i,
-        AutoOffsetReset = AutoOffsetReset.Earliest,
-        Acks = Acks.All,
-        AllowAutoCreateTopics = true,
-        EnableAutoCommit = true,
-        SaslUsername = uid,
-        SslKeyPassword = pwd,
-        //SecurityProtocol = SecurityProtocol.Plaintext
-        SecurityProtocol = SecurityProtocol.SaslSsl,
-        SaslMechanism = SaslMechanism.ScramSha512,
-
-    };
-
     var consumer = new ConsumerBuilder<Ignore, string>(configConsumer).Build();
-
     consumers.Add(consumer);
-
 }
 
 ActionBlock<IConsumer<Ignore, string>> ab = new ActionBlock<IConsumer<Ignore, string>>(async (consumer) =>
 {
     _ = Task.Run(async () =>
     {
-        consumer.Subscribe(topics);
+        consumer.Subscribe(topicName);
 
         while (true)
         {
@@ -85,29 +102,38 @@ ActionBlock<IConsumer<Ignore, string>> ab = new ActionBlock<IConsumer<Ignore, st
 
 });
 
-foreach(var consumer in consumers)
+foreach (var consumer in consumers)
 {
-   await ab.SendAsync(consumer);
+    await ab.SendAsync(consumer);
 }
+
+var configProducer = new ProducerConfig(cliConf)
+{
+
+};
 
 var producer = new ProducerBuilder<Null, string>(configProducer).Build();
 
 _ = Task.Run(async () =>
 {
+    long counter = 0;
     while (true)
     {
         Console.WriteLine("Producer");
 
-        ActionBlock<int> abp = new ActionBlock<int>(async (i) => {
-            var r = await producer.ProduceAsync(topics, new Message<Null, string>
+        ActionBlock<int> abp = new ActionBlock<int>(async (i) =>
+        {
+
+            counter++;
+            var r = await producer.ProduceAsync(topicName, new Message<Null, string>
             {
                 Value = JsonConvert.SerializeObject(new TestMsg
                 {
                     CreatedAt = DateTime.Now,
-                    Msg = " Nguyen Phan Du "+i
+                    Msg = " Nguyen Phan Du " + i
                 })
             });
-        }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism=5});
+        }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 5 });
 
         for (var i = 0; i < 100; i++)
         {
@@ -116,6 +142,8 @@ _ = Task.Run(async () =>
 
         abp.Complete();
         await abp.Completion;
+
+        Console.WriteLine("Total producer sent: " + counter);
 
         await Task.Delay(1000);
     }
